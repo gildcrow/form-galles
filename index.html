@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>📍 Aggiungi posizione</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f4f4f4;
+      padding: 2em;
+      max-width: 500px;
+      margin: auto;
+    }
+    h2 {
+      text-align: center;
+      color: #2e7d32;
+    }
+    label, input, textarea, button {
+      width: 100%;
+      display: block;
+      margin-bottom: 1em;
+      font-size: 1em;
+    }
+    button {
+      background: #2e7d32;
+      color: white;
+      padding: 0.7em;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #result {
+      margin-top: 1em;
+      text-align: center;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>📍 Aggiungi una tappa al viaggio</h2>
+
+  <label>Password:</label>
+  <input type="password" id="password" placeholder="Inserisci la password">
+
+  <label>Titolo:</label>
+  <input type="text" id="title" placeholder="Es. Cardiff – Giorno 1">
+
+  <label>Descrizione:</label>
+  <textarea id="description" placeholder="Breve descrizione..."></textarea>
+
+  <button onclick="submitForm()">Invia posizione</button>
+
+  <div id="result"></div>
+
+  <script>
+    const AUTH_PASSWORD = "galles2025"; // Cambiala se vuoi
+
+    function submitForm() {
+      const password = document.getElementById('password').value;
+      if (password !== AUTH_PASSWORD) {
+        alert("❌ Password errata.");
+        return;
+      }
+
+      if (!navigator.geolocation) {
+        alert("⚠️ Il browser non supporta la geolocalizzazione.");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(position => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        const title = document.getElementById('title').value;
+        const description = document.getElementById('description').value;
+
+        if (!title || !description) {
+          alert("📌 Inserisci titolo e descrizione.");
+          return;
+        }
+
+        const newMarker = {
+          lat: lat,
+          lng: lng,
+          title: title,
+          description: description
+        };
+
+        fetch("https://script.google.com/macros/s/AKfycbyieumcEAm6vJZdQqpDzRqwBk8yidfa8upA3VO1Ofd5D-naJZpcIU5DbPmVclxW_zOU9g/exec", {
+          method: 'POST',
+          body: JSON.stringify(newMarker)
+        })
+        .then(res => res.text())
+        .then(msg => {
+          document.getElementById('result').innerText = msg;
+          document.getElementById('title').value = "";
+          document.getElementById('description').value = "";
+        })
+        .catch(err => {
+          document.getElementById('result').innerText = "Errore nell'invio.";
+        });
+      });
+    }
+  </script>
+
+</body>
+</html>
