@@ -2,55 +2,129 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <title>📍 Aggiungi posizione</title>
+  <title>📍 Aggiungi tappa - Galles 2025</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: sans-serif;
-      background: #f4f4f4;
-      padding: 2em;
-      max-width: 500px;
+      font-family: 'Inter', sans-serif;
+      background: #f0f4f3;
+      padding: 2rem;
+      max-width: 600px;
       margin: auto;
     }
-    h2 {
+
+    h1 {
       text-align: center;
       color: #2e7d32;
+      font-size: 1.8rem;
+      margin-bottom: 2rem;
     }
-    label, input, textarea, button {
-      width: 100%;
+
+    .field {
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      font-weight: 600;
+      margin-bottom: 0.4rem;
       display: block;
-      margin-bottom: 1em;
-      font-size: 1em;
+      color: #333;
     }
+
+    input, textarea {
+      width: 100%;
+      padding: 0.75rem;
+      font-size: 1rem;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      transition: border 0.3s ease;
+    }
+
+    input:focus, textarea:focus {
+      border-color: #2e7d32;
+      outline: none;
+    }
+
     button {
-      background: #2e7d32;
+      width: 100%;
+      padding: 0.9rem;
+      background-color: #2e7d32;
       color: white;
-      padding: 0.7em;
       border: none;
-      border-radius: 5px;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 8px;
       cursor: pointer;
+      transition: background 0.3s ease;
     }
+
+    button:hover {
+      background-color: #276c2b;
+    }
+
     #result {
-      margin-top: 1em;
+      margin-top: 1.5rem;
       text-align: center;
-      font-weight: bold;
+      font-weight: 600;
+      color: #2e7d32;
+    }
+
+    .icon-label::before {
+      content: attr(data-icon);
+      margin-right: 0.5rem;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: #222;
+        color: #eee;
+      }
+
+      input, textarea {
+        background: #333;
+        color: #fff;
+        border-color: #555;
+      }
+
+      input:focus, textarea:focus {
+        border-color: #66bb6a;
+      }
+
+      button {
+        background-color: #66bb6a;
+      }
+
+      #result {
+        color: #66bb6a;
+      }
     }
   </style>
 </head>
 <body>
 
-  <h2>📍 Aggiungi una tappa al viaggio</h2>
+  <h1>📍 Aggiungi una tappa<br>Galles 2025</h1>
 
-  <label>Password:</label>
-  <input type="password" id="password" placeholder="Inserisci la password">
+  <div class="field">
+    <label class="icon-label" data-icon="🔒">Password</label>
+    <input type="password" id="password" placeholder="Inserisci la password">
+  </div>
 
-  <label>Titolo:</label>
-  <input type="text" id="title" placeholder="Es. Cardiff – Giorno 1">
+  <div class="field">
+    <label class="icon-label" data-icon="📝">Titolo</label>
+    <input type="text" id="title" placeholder="Es. Cardiff – Giorno 1">
+  </div>
 
-  <label>Descrizione:</label>
-  <textarea id="description" placeholder="Breve descrizione..."></textarea>
+  <div class="field">
+    <label class="icon-label" data-icon="💬">Descrizione</label>
+    <textarea id="description" rows="4" placeholder="Racconta brevemente cosa hai fatto…"></textarea>
+  </div>
 
-  <button onclick="submitForm()">Invia posizione</button>
+  <button onclick="submitForm()">📌 Invia posizione</button>
 
   <div id="result"></div>
 
@@ -59,13 +133,15 @@
 
     function submitForm() {
       const password = document.getElementById('password').value;
+      const resultBox = document.getElementById('result');
+
       if (password !== AUTH_PASSWORD) {
-        alert("❌ Password errata.");
+        resultBox.innerText = "❌ Password errata.";
         return;
       }
 
       if (!navigator.geolocation) {
-        alert("⚠️ Il browser non supporta la geolocalizzazione.");
+        resultBox.innerText = "⚠️ Geolocalizzazione non supportata.";
         return;
       }
 
@@ -76,7 +152,7 @@
         const description = document.getElementById('description').value;
 
         if (!title || !description) {
-          alert("📌 Inserisci titolo e descrizione.");
+          resultBox.innerText = "📌 Titolo e descrizione obbligatori.";
           return;
         }
 
@@ -87,18 +163,18 @@
           description: description
         };
 
-        fetch("https://script.google.com/macros/s/AKfycbyieumcEAm6vJZdQqpDzRqwBk8yidfa8upA3VO1Ofd5D-naJZpcIU5DbPmVclxW_zOU9g/exec", {
+        fetch("https://script.google.com/macros/s/TUO_SCRIPT_ID/exec", {
           method: 'POST',
           body: JSON.stringify(newMarker)
         })
         .then(res => res.text())
         .then(msg => {
-          document.getElementById('result').innerText = msg;
+          resultBox.innerText = msg;
           document.getElementById('title').value = "";
           document.getElementById('description').value = "";
         })
         .catch(err => {
-          document.getElementById('result').innerText = "Errore nell'invio.";
+          resultBox.innerText = "❌ Errore durante l'invio.";
         });
       });
     }
