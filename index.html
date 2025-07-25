@@ -10,7 +10,7 @@
       padding: 2rem;
       max-width: 500px;
       margin: auto;
-      background: #f9f9f9;
+      background: #f0f4f8;
     }
     h1 {
       text-align: center;
@@ -48,11 +48,11 @@
     .icon-label::before {
       content: attr(data-icon) " ";
     }
-    footer {
-      margin-top: 2rem;
+    #message {
       text-align: center;
-      font-size: 0.9rem;
-      color: #777;
+      font-size: 1rem;
+      color: green;
+      margin-top: 1rem;
     }
   </style>
 </head>
@@ -60,7 +60,7 @@
 
   <h1>📍 Aggiungi una tappa</h1>
 
-  <form action="https://formspree.io/f/xzzvrgvp" method="POST">
+  <form method="POST" action="https://script.google.com/macros/s/AKfycbwM2iQuCv64Vq2-xiHM9JGyV-AhEl3eFaH6Tl8R2-_zr0ovaR0-qMVcun32A5ZbNDNoYA/exec" target="hidden_iframe" onsubmit="showMessage()">
     
     <div class="field">
       <label class="icon-label" data-icon="📝">Titolo</label>
@@ -95,12 +95,10 @@
 
     <button type="button" onclick="getPosition()">📡 Usa la mia posizione</button>
     <button type="submit">✅ Invia tappa</button>
-
   </form>
 
-  <footer>
-    Galles 2025 · gildcrow.github.io
-  </footer>
+  <iframe name="hidden_iframe" style="display:none;"></iframe>
+  <div id="message" style="display:none;">✅ Posizione inviata!</div>
 
   <script>
     function getPosition() {
@@ -109,11 +107,18 @@
           document.getElementById('lat').value = pos.coords.latitude.toFixed(6);
           document.getElementById('lng').value = pos.coords.longitude.toFixed(6);
         }, err => {
-          alert("Impossibile ottenere la posizione: " + err.message);
+          alert("Errore nella geolocalizzazione: " + err.message);
         });
       } else {
-        alert("Geolocalizzazione non supportata dal browser.");
+        alert("Il tuo browser non supporta la geolocalizzazione.");
       }
+    }
+
+    function showMessage() {
+      document.getElementById('message').style.display = 'block';
+      setTimeout(() => {
+        document.getElementById('message').style.display = 'none';
+      }, 3000);
     }
   </script>
 
