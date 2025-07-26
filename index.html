@@ -1,56 +1,41 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>📍 Aggiungi posizione - Galles 2025</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Form Galles</title>
   <style>
     body {
       font-family: sans-serif;
-      padding: 1rem;
-      background: #f3f3f3;
       max-width: 600px;
       margin: auto;
-    }
-    h1 {
-      text-align: center;
+      padding: 2rem;
     }
     label {
       display: block;
       margin-top: 1rem;
-      font-weight: bold;
     }
-    input, select, textarea {
+    input, select, textarea, button {
       width: 100%;
-      padding: 0.6rem;
-      margin-top: 0.3rem;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      box-sizing: border-box;
+      padding: 0.5rem;
+      margin-top: 0.25rem;
+      font-size: 1rem;
     }
     button {
-      margin-top: 1.5rem;
-      padding: 0.8rem;
-      width: 100%;
       background: #007BFF;
       color: white;
-      font-size: 1rem;
       border: none;
-      border-radius: 6px;
+      margin-top: 1rem;
       cursor: pointer;
+      border-radius: 6px;
     }
     button:hover {
       background: #0056b3;
     }
-    .info {
-      font-size: 0.85rem;
-      color: #555;
-      margin-top: 0.5rem;
-    }
-    .footer {
-      margin-top: 2rem;
+    small {
+      display: block;
       text-align: center;
-      font-size: 0.8rem;
+      margin-top: 2rem;
       color: #888;
     }
   </style>
@@ -58,102 +43,107 @@
 <body>
   <h1>📍 Aggiungi posizione</h1>
 
-  <form id="positionForm">
-    <label for="title">Titolo*</label>
-    <input type="text" id="title" required>
+  <form id="locationForm">
+    <label>Titolo
+      <input type="text" id="title" required />
+    </label>
 
-    <label for="description">Descrizione</label>
-    <textarea id="description" placeholder="Facoltativa"></textarea>
+    <label>Descrizione (facoltativa)
+      <textarea id="description" rows="2"></textarea>
+    </label>
 
-    <label for="type">Tipo di tappa</label>
-    <select id="type">
-      <option value="city">🏙️ Città</option>
-      <option value="castle">🏰 Castello</option>
-      <option value="hike">🥾 Escursione</option>
-      <option value="food">🍽️ Cibo</option>
-      <option value="other">❓ Altro</option>
-    </select>
+    <label>Tipo di punto
+      <select id="type">
+        <option value="castle">🏰 Castello</option>
+        <option value="city">🏙️ Città</option>
+        <option value="hike">🥾 Escursione</option>
+        <option value="food">🍽️ Cibo</option>
+        <option value="other">❓ Altro</option>
+      </select>
+    </label>
 
-    <label for="lat">Latitudine</label>
-    <input type="number" step="any" id="lat" required>
+    <label>Latitudine
+      <input type="number" id="lat" step="any" required />
+    </label>
 
-    <label for="lng">Longitudine</label>
-    <input type="number" step="any" id="lng" required>
+    <label>Longitudine
+      <input type="number" id="lng" step="any" required />
+    </label>
 
-    <div class="info">
-      Puoi inserire manualmente le coordinate oppure usare il pulsante qui sotto:
-    </div>
     <button type="button" onclick="getLocation()">📍 Usa la mia posizione</button>
 
-    <button type="submit">✅ Invia</button>
+    <label>📷 Foto (facoltativa)
+      <input type="file" id="photo" accept="image/*" capture="environment" />
+    </label>
+
+    <button type="submit">➕ Invia posizione</button>
   </form>
 
-  <div class="footer">App versione 1.1 – Edoardo</div>
+  <div id="status" style="margin-top: 1rem;"></div>
 
+  <small>App versione 1.2</small>
+
+  <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
     import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+    import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAlPHC5uF6y_eDhCpAHuY1zNxElfAiPJMY",
       authDomain: "form-galles.firebaseapp.com",
       databaseURL: "https://form-galles-default-rtdb.europe-west1.firebasedatabase.app",
       projectId: "form-galles",
-      storageBucket: "form-galles.firebasestorage.app",
+      storageBucket: "form-galles.appspot.com",
       messagingSenderId: "617288187321",
       appId: "1:617288187321:web:1f4fcf35eb6c251ef38a68"
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+    const storage = getStorage(app);
 
-    document.getElementById('positionForm').addEventListener('submit', async (e) => {
+    document.getElementById("locationForm").addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      const title = document.getElementById('title').value.trim();
-      const description = document.getElementById('description').value.trim();
-      const type = document.getElementById('type').value;
-      const lat = parseFloat(document.getElementById('lat').value);
-      const lng = parseFloat(document.getElementById('lng').value);
+      const title = document.getElementById("title").value.trim();
+      const description = document.getElementById("description").value.trim();
+      const type = document.getElementById("type").value;
+      const lat = parseFloat(document.getElementById("lat").value);
+      const lng = parseFloat(document.getElementById("lng").value);
+      const fileInput = document.getElementById("photo");
 
-      if (!title || isNaN(lat) || isNaN(lng)) {
-        alert("Per favore compila titolo, latitudine e longitudine.");
-        return;
+      const timestamp = Date.now();
+      const data = { title, description, type, lat, lng, timestamp };
+
+      // Se è stata selezionata una foto
+      if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const imageRef = sRef(storage, `photos/${timestamp}_${file.name}`);
+        await uploadBytes(imageRef, file);
+        const url = await getDownloadURL(imageRef);
+        data.imageUrl = url;
       }
 
-      const data = {
-        title,
-        description,
-        type,
-        lat,
-        lng,
-        timestamp: Date.now()
-      };
-
-      try {
-        await push(ref(db, 'locations'), data);
-        alert("✅ Posizione salvata!");
-        document.getElementById('positionForm').reset();
-      } catch (error) {
-        alert("❌ Errore durante l'invio.");
-        console.error(error);
-      }
+      await push(ref(db, "locations"), data);
+      document.getElementById("status").innerText = "✅ Posizione inviata!";
+      document.getElementById("locationForm").reset();
     });
 
-    window.getLocation = () => {
+    // Geolocalizzazione
+    window.getLocation = function () {
       if (!navigator.geolocation) {
-        alert("Geolocalizzazione non supportata.");
+        alert("Geolocalizzazione non supportata");
         return;
       }
 
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          document.getElementById('lat').value = position.coords.latitude.toFixed(6);
-          document.getElementById('lng').value = position.coords.longitude.toFixed(6);
+          document.getElementById("lat").value = position.coords.latitude.toFixed(6);
+          document.getElementById("lng").value = position.coords.longitude.toFixed(6);
         },
         (error) => {
-          alert("Impossibile ottenere la posizione.");
-          console.error(error);
+          alert("Impossibile ottenere la posizione: " + error.message);
         }
       );
     };
