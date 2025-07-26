@@ -32,6 +32,10 @@
     button:hover {
       background: #0056b3;
     }
+    #status {
+      margin-top: 1rem;
+      font-weight: bold;
+    }
     small {
       display: block;
       text-align: center;
@@ -79,11 +83,10 @@
     <button type="submit">➕ Invia posizione</button>
   </form>
 
-  <div id="status" style="margin-top: 1rem;"></div>
+  <div id="status"></div>
+  <small>App versione 1.3</small>
 
-  <small>App versione 1.2</small>
-
-  <!-- Firebase SDK -->
+  <!-- Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
     import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
@@ -103,8 +106,13 @@
     const db = getDatabase(app);
     const storage = getStorage(app);
 
-    document.getElementById("locationForm").addEventListener("submit", async (e) => {
+    const form = document.getElementById("locationForm");
+    const status = document.getElementById("status");
+
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
+
+      status.textContent = "⏳ Invio in corso...";
 
       const title = document.getElementById("title").value.trim();
       const description = document.getElementById("description").value.trim();
@@ -113,24 +121,32 @@
       const lng = parseFloat(document.getElementById("lng").value);
       const fileInput = document.getElementById("photo");
 
+      if (!title || isNaN(lat) || isNaN(lng)) {
+        status.textContent = "❌ Dati non validi";
+        return;
+      }
+
       const timestamp = Date.now();
       const data = { title, description, type, lat, lng, timestamp };
 
-      // Se è stata selezionata una foto
-      if (fileInput.files.length > 0) {
-        const file = fileInput.files[0];
-        const imageRef = sRef(storage, `photos/${timestamp}_${file.name}`);
-        await uploadBytes(imageRef, file);
-        const url = await getDownloadURL(imageRef);
-        data.imageUrl = url;
-      }
+      try {
+        if (fileInput.files.length > 0) {
+          const file = fileInput.files[0];
+          const imageRef = sRef(storage, `photos/${timestamp}_${file.name}`);
+          await uploadBytes(imageRef, file);
+          const imageUrl = await getDownloadURL(imageRef);
+          data.imageUrl = imageUrl;
+        }
 
-      await push(ref(db, "locations"), data);
-      document.getElementById("status").innerText = "✅ Posizione inviata!";
-      document.getElementById("locationForm").reset();
+        await push(ref(db, "locations"), data);
+        status.textContent = "✅ Posizione inviata!";
+        form.reset();
+      } catch (error) {
+        console.error("Errore:", error);
+        status.textContent = "❌ Errore durante l'invio.";
+      }
     });
 
-    // Geolocalizzazione
     window.getLocation = function () {
       if (!navigator.geolocation) {
         alert("Geolocalizzazione non supportata");
@@ -138,12 +154,12 @@
       }
 
       navigator.geolocation.getCurrentPosition(
-        (position) => {
-          document.getElementById("lat").value = position.coords.latitude.toFixed(6);
-          document.getElementById("lng").value = position.coords.longitude.toFixed(6);
+        (pos) => {
+          document.getElementById("lat").value = pos.coords.latitude.toFixed(6);
+          document.getElementById("lng").value = pos.coords.longitude.toFixed(6);
         },
-        (error) => {
-          alert("Impossibile ottenere la posizione: " + error.message);
+        (err) => {
+          alert("Errore nella geolocalizzazione: " + err.message);
         }
       );
     };
