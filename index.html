@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Aggiungi posizione</title>
+  <title>Aggiungi posizione - Galles</title>
   <style>
     body {
       font-family: sans-serif;
@@ -33,20 +33,24 @@
     button:hover {
       background: #0056b3;
     }
+    .small {
+      font-size: 0.9rem;
+      color: #555;
+    }
   </style>
 </head>
 <body>
-  <h2>📍 Aggiungi posizione</h2>
+  <h2>📍 Aggiungi posizione al diario</h2>
 
-  <form method="POST" action="https://script.google.com/macros/s/AKfycbwMbN6yD9lTe8bWSiWI6QdO4QlAPGJ_8xKO2oMaNDg4idN9o5FRCIbge_09jyHa7p17/exec" target="hidden_iframe">
+  <form id="locationForm">
     <label>Titolo</label>
-    <input type="text" name="title" required>
+    <input type="text" id="title" required />
 
     <label>Descrizione</label>
-    <textarea name="description" required></textarea>
+    <textarea id="description" required></textarea>
 
     <label>Tipo</label>
-    <select name="type">
+    <select id="type">
       <option value="city">🏙️ Città</option>
       <option value="castle">🏰 Castello</option>
       <option value="hike">🥾 Escursione</option>
@@ -55,28 +59,64 @@
     </select>
 
     <label>Latitudine</label>
-    <input type="text" name="lat" id="lat" required readonly>
+    <input type="text" id="lat" readonly required />
 
     <label>Longitudine</label>
-    <input type="text" name="lng" id="lng" required readonly>
+    <input type="text" id="lng" readonly required />
 
     <button type="button" onclick="getLocation()">📡 Usa la mia posizione</button>
     <button type="submit">📬 Invia</button>
-
-    <iframe name="hidden_iframe" style="display:none;"></iframe>
+    <p class="small">Dopo l'invio, controlla la mappa per vedere il segnaposto!</p>
   </form>
 
-  <script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+    import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAlPHC5uF6y_eDhCpAHuY1zNxElfAiPJMY",
+      authDomain: "form-galles.firebaseapp.com",
+      databaseURL: "https://form-galles-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "form-galles",
+      storageBucket: "form-galles.firebasestorage.app",
+      messagingSenderId: "617288187321",
+      appId: "1:617288187321:web:1f4fcf35eb6c251ef38a68"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    document.getElementById("locationForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const data = {
+        title: document.getElementById("title").value,
+        description: document.getElementById("description").value,
+        type: document.getElementById("type").value,
+        lat: parseFloat(document.getElementById("lat").value),
+        lng: parseFloat(document.getElementById("lng").value),
+        timestamp: Date.now()
+      };
+
+      try {
+        await push(ref(db, "locations"), data);
+        alert("✅ Posizione salvata!");
+        document.getElementById("locationForm").reset();
+      } catch (error) {
+        alert("❌ Errore nel salvataggio: " + error.message);
+      }
+    });
+
     function getLocation() {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function(pos) {
           document.getElementById("lat").value = pos.coords.latitude.toFixed(6);
           document.getElementById("lng").value = pos.coords.longitude.toFixed(6);
         }, function(err) {
-          alert("Impossibile ottenere la posizione: " + err.message);
+          alert("Errore geolocalizzazione: " + err.message);
         });
       } else {
-        alert("Geolocalizzazione non supportata dal browser");
+        alert("Geolocalizzazione non supportata.");
       }
     }
   </script>
