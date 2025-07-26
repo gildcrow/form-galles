@@ -84,7 +84,7 @@
   </form>
 
   <div id="status"></div>
-  <small>App versione 1.4</small>
+  <small>App versione 1.3</small>
 
   <!-- Firebase -->
   <script type="module">
@@ -111,6 +111,7 @@
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
+
       status.textContent = "⏳ Invio in corso...";
 
       const title = document.getElementById("title").value.trim();
@@ -129,16 +130,14 @@
       const data = { title, description, type, lat, lng, timestamp };
 
       try {
-        // Caricamento immagine su Firebase Storage
         if (fileInput.files.length > 0) {
           const file = fileInput.files[0];
           const imageRef = sRef(storage, `photos/${timestamp}_${file.name}`);
           await uploadBytes(imageRef, file);
-          const imageUrl = await getDownloadURL(imageRef);
-          data.imageUrl = imageUrl; // <-- correttamente ottenuto via Firebase
+          const imageUrl = await getDownloadURL(imageRef); // ✅ CORRETTO
+          data.imageUrl = imageUrl;
         }
 
-        // Salva i dati nel Realtime Database
         await push(ref(db, "locations"), data);
         status.textContent = "✅ Posizione inviata!";
         form.reset();
@@ -148,7 +147,6 @@
       }
     });
 
-    // Ottieni la posizione GPS
     window.getLocation = function () {
       if (!navigator.geolocation) {
         alert("Geolocalizzazione non supportata");
